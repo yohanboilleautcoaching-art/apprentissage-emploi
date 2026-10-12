@@ -1,0 +1,636 @@
+<title>Persona recruteur cible</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: un dossier de candidature. Formulaire a gauche, fiche persona qui se remplit a droite. Surligneur jaune comme seul accent. */
+:root{
+  --bg:#EDF0F3; --surface:#FFFFFF; --ink:#101C28; --muted:#566471; --line:#CFD7DF;
+  --hl:#FFD23F; --hl-ink:#101C28; --hl-soft:#FFF1B8;
+  --btn-bg:#101C28; --btn-fg:#F6F8FA; --focus:#1F5FD6; --danger:#B3261E;
+  --font-display:'Bricolage Grotesque','Avenir Next','Segoe UI',sans-serif;
+  --font-body:'Instrument Sans','Segoe UI',system-ui,sans-serif;
+  --font-mono:'DM Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D141C; --surface:#151F2A; --ink:#E9EFF4; --muted:#9BA9B6; --line:#2B3947;
+    --hl-soft:#3B3413; --btn-bg:#E9EFF4; --btn-fg:#0D141C; --focus:#86AEFF; --danger:#FF9088;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D141C; --surface:#151F2A; --ink:#E9EFF4; --muted:#9BA9B6; --line:#2B3947;
+  --hl-soft:#3B3413; --btn-bg:#E9EFF4; --btn-fg:#0D141C; --focus:#86AEFF; --danger:#FF9088;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.55;padding-inline:16px;padding-block:24px 56px}
+.wrap{max-width:1040px;margin-inline:auto}
+h1,h2,h3,p{margin:0}
+h1{font-family:var(--font-display);font-weight:700;font-size:clamp(30px,5.2vw,48px);line-height:1.06;letter-spacing:-.02em;text-wrap:balance}
+h1:focus{outline:none}
+.hl{background:var(--hl);color:var(--hl-ink);padding:0 .14em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.kicker{font:500 12px var(--font-mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.lead{margin-top:16px;font-size:18px;max-width:60ch;color:var(--ink)}
+.note{margin-top:20px;font-size:14px;color:var(--muted);max-width:56ch}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:32px}
+.panel{min-width:0}
+.side{display:none;min-width:0}
+@media (min-width:860px){
+  .layout{grid-template-columns:minmax(0,1fr) 300px;gap:56px}
+  .side{display:block;position:sticky;top:20px;align-self:start}
+}
+
+/* progression */
+.prog{margin-bottom:36px}
+.prog ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.seg{display:grid;gap:8px;width:100%;padding:0;border:0;background:none;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.seg:disabled{cursor:default}
+.seg .bar{display:block;height:6px;border-radius:3px;background:var(--line)}
+.seg.done .bar{background:var(--ink)}
+.seg.cur .bar{background:var(--hl);box-shadow:0 0 0 1.5px var(--ink)}
+.seg .lab{display:none;font:500 11px var(--font-mono);letter-spacing:.04em;color:var(--muted);text-transform:uppercase;overflow-wrap:anywhere}
+.seg.cur .lab{color:var(--ink)}
+.seg:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:3px}
+@media (min-width:700px){.seg .lab{display:block}}
+
+/* champs */
+.fields{display:grid;gap:30px;margin-top:32px}
+.field{display:grid;gap:10px;min-width:0}
+.lbl{font-weight:600;font-size:17px;line-height:1.3}
+input[type="text"],textarea{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:12px 14px}
+textarea{line-height:1.5;resize:vertical;min-height:92px}
+input[type="text"]::placeholder,textarea::placeholder{color:var(--muted);opacity:.85}
+input[type="text"]:focus,textarea:focus{outline:3px solid var(--focus);outline-offset:1px;border-color:var(--ink)}
+.field.invalid input[type="text"],.field.invalid textarea{border-color:var(--danger)}
+.err{font-size:14px;color:var(--danger);font-weight:500}
+.other{display:grid;gap:10px;margin-top:4px}
+.lbl.sub{font-size:15px;font-weight:500}
+
+.opts{display:grid;gap:10px}
+.opts.cards{grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
+.opts.two{grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.opt{position:relative;display:flex;gap:12px;align-items:flex-start;min-width:0;padding:14px 16px;background:var(--surface);border:1.5px solid var(--line);border-radius:10px;cursor:pointer}
+.opt.chip{align-items:center;padding:9px 14px 9px 12px;border-radius:999px}
+.opt input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.opt:hover{border-color:var(--ink)}
+.opt.on{border-color:var(--ink);background:var(--hl-soft)}
+.opt:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
+.box{flex:none;position:relative;width:20px;height:20px;margin-top:2px;border:1.5px solid var(--ink);border-radius:4px;background:var(--surface)}
+.chip .box{margin-top:0}
+.opt.on .box{background:var(--hl)}
+.opt.on .box::after{content:"";position:absolute;left:5px;top:1px;width:5px;height:10px;border:solid var(--hl-ink);border-width:0 2px 2px 0;transform:rotate(45deg)}
+.txt{display:grid;gap:2px;min-width:0}
+.txt b{font-weight:600;overflow-wrap:anywhere}
+.txt small{font-size:14px;color:var(--muted);line-height:1.4}
+.opts.cards .txt b{font-family:var(--font-display);font-size:18px;line-height:1.2}
+
+/* boutons */
+.nav{display:flex;flex-wrap:wrap;gap:12px;margin-top:36px}
+.btn{font:600 16px var(--font-body);padding:13px 22px;border-radius:8px;border:1.5px solid transparent;cursor:pointer;color:var(--ink);background:transparent}
+.btn.primary{background:var(--btn-bg);color:var(--btn-fg)}
+.btn.primary:hover{background:var(--hl);color:var(--hl-ink)}
+.btn.ghost{border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--ink)}
+.btn.armed{border-color:var(--danger);color:var(--danger)}
+.btn:focus-visible,.linkbtn:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.linkbtn{background:none;border:0;padding:4px 0;font:inherit;font-size:14px;color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+@media (prefers-reduced-motion:no-preference){
+  .btn,.opt,.seg .bar{transition:background-color .15s,border-color .15s,color .15s}
+}
+
+/* introduction */
+.outline{list-style:none;margin:28px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));column-gap:28px;counter-reset:s}
+.outline li{counter-increment:s;padding-block:10px;border-bottom:1px solid var(--line);font-weight:500}
+.outline li::before{content:counter(s,decimal-leading-zero);font:500 12px var(--font-mono);color:var(--muted);margin-right:12px}
+
+/* fiche persona */
+.card{display:grid;gap:18px;padding:20px;background:var(--surface);border:1.5px solid var(--line);border-radius:14px}
+.card-head{display:flex;align-items:center;gap:14px;min-width:0}
+.avatar{flex:none;display:grid;place-items:center;width:52px;height:52px;border-radius:50%;background:var(--hl);color:var(--hl-ink);font:700 18px var(--font-display)}
+.card h3{font:700 22px/1.15 var(--font-display);overflow-wrap:anywhere}
+.role{margin-top:2px;font-size:15px;color:var(--muted)}
+.facts{margin:0;display:grid;gap:12px}
+.facts dt{font:500 11px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.facts dd{margin:2px 0 0;overflow-wrap:anywhere}
+.todo{color:var(--muted);font-style:italic}
+.side .note{margin-top:16px}
+
+/* synthese */
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:28px}
+#status{font-size:14px;color:var(--muted)}
+.res-grid{display:grid;gap:28px;margin-top:32px}
+.res-side{min-width:0}
+.res-main{min-width:0}
+@media (min-width:860px){
+  .res-grid{grid-template-columns:300px minmax(0,1fr);gap:56px}
+  .res-side{position:sticky;top:20px;align-self:start}
+}
+.blk{display:grid;gap:16px;padding-block:22px 28px;border-top:2px solid var(--ink)}
+.blk:first-child{padding-top:20px}
+.blk-h{display:flex;align-items:baseline;gap:12px}
+.blk-h .num{font:500 12px var(--font-mono);color:var(--muted)}
+.blk-h h2{font:700 22px/1.2 var(--font-display)}
+.blk-h .linkbtn{margin-left:auto}
+.qa{display:grid;gap:2px}
+.qa+.qa{margin-top:14px}
+.q{font-size:14px;color:var(--muted)}
+.a{white-space:pre-wrap;overflow-wrap:anywhere}
+.fallback{display:grid;gap:8px;margin-top:28px}
+.fallback textarea{min-height:200px;font-family:var(--font-mono);font-size:14px}
+.foot{margin-top:40px;font-size:13px;color:var(--muted)}
+</style>
+
+<div id="app"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function(){
+var STEPS=[
+{key:'qui',title:'Qui est-il ?',
+ intro:'Choisissez le poste exact de la personne qui lira votre candidature, puis donnez-lui un nom. Appuyez-vous sur du réel : offres d’emploi, profils LinkedIn de recruteurs et de managers, site de l’entreprise.',
+ fields:[
+  {id:'poste',type:'cards',label:'Quel est son poste exact ?',options:[
+    {v:'Responsable du recrutement',d:'Il cherche, sélectionne et fait entrer les nouveaux talents.'},
+    {v:'Manager des ventes',d:'Il pilote une équipe commerciale et ses résultats.'},
+    {v:'Directeur général',d:'Il dirige l’entreprise et tranche en dernier ressort.'},
+    {v:'Autre',d:'Un autre poste, que vous précisez ensuite.'}]},
+  {id:'nom',type:'text',label:'Prénom et nom (fictif mais réaliste)',ph:'Par exemple : Karine Muller'}
+ ]},
+{key:'entreprise',title:'Son entreprise',
+ intro:'Décrivez l’entreprise dans laquelle travaille votre recruteur.',
+ fields:[
+  {id:'taille',type:'choice',label:'Quelle est la taille de l’entreprise ?',options:[
+    {v:'TPE',d:'moins de 10 salariés'},
+    {v:'PME',d:'de 10 à 249 salariés'},
+    {v:'ETI',d:'de 250 à 4 999 salariés'},
+    {v:'Grand groupe',d:'5 000 salariés et plus'}]},
+  {id:'secteur',type:'text',label:'Dans quel secteur d’activité ?',ph:'Par exemple : logiciels RH, transport, assurance, énergie'},
+  {id:'cible',type:'multi',label:'Quelle est sa cible commerciale ? (plusieurs choix possibles)',options:[
+    {v:'B2B',d:'L’entreprise vend à des entreprises.'},
+    {v:'B2C',d:'L’entreprise vend à des particuliers.'},
+    {v:'B2B2C',d:'L’entreprise vend à des particuliers en passant par des entreprises partenaires.'}]}
+ ]},
+{key:'objectifs',title:'Ses objectifs métiers',
+ intro:'Ce qu’il doit accomplir, et le rôle qu’un alternant peut jouer pour l’aider.',
+ fields:[
+  {id:'resultats',type:'area',label:'Quels résultats doit-il atteindre ?',ph:'Chiffre d’affaires, nombre de rendez-vous, recrutements à boucler…'},
+  {id:'interet',type:'area',label:'Qu’est-ce qui l’intéresse dans la recherche d’un alternant ?',ph:'Ce que l’alternance lui apporte à lui et à son équipe'},
+  {id:'attentes',type:'area',label:'Qu’attend-il concrètement d’un alternant ?',ph:'Au quotidien, dans les premières semaines, puis dans l’année'}
+ ]},
+{key:'freins',title:'Ses freins',
+ intro:'Ce qui le fait hésiter, ou le braque, quand il reçoit une candidature d’alternant.',
+ fields:[
+  {id:'peurs',type:'area',label:'Quelles sont ses peurs vis-à-vis d’un alternant ?',ph:'Temps de formation, départ en cours d’année, manque d’autonomie…'},
+  {id:'erreurs',type:'area',label:'Quelles erreurs de candidats l’agacent ?',ph:'Candidature générique, aucune connaissance de l’entreprise…'}
+ ]},
+{key:'decision',title:'Sa décision',
+ intro:'La façon dont il choisit entre deux candidats.',
+ fields:[
+  {id:'criteres',type:'area',label:'Quels sont ses critères de décision ?',ph:'Ce qui fait pencher la balance en faveur d’un candidat'},
+  {id:'intervenants',type:'area',label:'Qui d’autre intervient dans la décision ?',ph:'RH, direction, équipe, tuteur…'}
+ ]},
+{key:'communication',title:'Sa communication',
+ intro:'Où et quand l’atteindre pour que votre message soit lu.',
+ fields:[
+  {id:'canal',type:'choice',label:'Quel canal privilégie-t-il ?',options:[{v:'Téléphone'},{v:'LinkedIn'},{v:'Mail'}]},
+  {id:'jours',type:'multi',label:'Quels jours de la semaine est-il le plus joignable ?',options:[{v:'Lundi'},{v:'Mardi'},{v:'Mercredi'},{v:'Jeudi'},{v:'Vendredi'}]},
+  {id:'moments',type:'multi',label:'À quel moment de la journée ?',options:[{v:'Avant 9 h'},{v:'9 h à 12 h'},{v:'Pause déjeuner'},{v:'14 h à 17 h'},{v:'Après 17 h'}]}
+ ]}
+];
+
+var app=document.getElementById('app');
+var KEY='persona-recruteur-v1';
+var FIELDS={};
+STEPS.forEach(function(s){s.fields.forEach(function(f){FIELDS[f.id]=f;});});
+var LAST=STEPS.length-1;
+var A={};
+var S={view:'intro',step:0,max:0,showErrors:false,fallback:false};
+try{
+  var raw=localStorage.getItem(KEY);
+  if(raw){
+    var d=JSON.parse(raw);
+    if(d&&typeof d==='object'){
+      A=(d.a&&typeof d.a==='object')?d.a:{};
+      S.view=['intro','form','result'].indexOf(d.view)>=0?d.view:'intro';
+      S.step=Math.min(Math.max(+d.step||0,0),LAST);
+      S.max=Math.min(Math.max(+d.max||0,S.step),LAST);
+    }
+  }
+}catch(e){}
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify({a:A,view:S.view,step:S.step,max:S.max}));}catch(e){}
+}
+
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function valid(f){
+  var v=A[f.id];
+  if(f.id==='poste'&&v==='Autre') return typeof A.poste_autre==='string'&&A.poste_autre.trim().length>0;
+  if(f.type==='text'||f.type==='area') return typeof v==='string'&&v.trim().length>0;
+  if(f.type==='multi') return Array.isArray(v)&&v.length>0;
+  return !!v;
+}
+function val(id){
+  var v=A[id];
+  if(id==='poste'&&v==='Autre'){var o=(A.poste_autre||'').trim();return o||'Autre';}
+  if(Array.isArray(v)) return v.join(', ');
+  return typeof v==='string'?v.trim():'';
+}
+function shown(f){
+  var v=A[f.id];
+  if(Array.isArray(v)) return v.join(', ');
+  if(v==null||v==='') return '';
+  if(f.id==='poste'&&v==='Autre') return 'Autre : '+String(A.poste_autre||'').trim();
+  if(f.id==='taille'){
+    var o=f.options.filter(function(x){return x.v===v;})[0];
+    if(o) return o.v+' ('+o.d+')';
+  }
+  return String(v).trim();
+}
+function initials(n){
+  var p=(n||'').trim().split(/\s+/).filter(Boolean);
+  if(!p.length) return '?';
+  var a=p[0].charAt(0);
+  var b=p.length>1?p[p.length-1].charAt(0):'';
+  return (a+b).toUpperCase();
+}
+
+function cardHTML(){
+  var nom=val('nom');
+  var poste=val('poste');
+  function fact(label,text){
+    return '<div><dt>'+label+'</dt><dd>'+(text?esc(text):'<span class="todo">à compléter</span>')+'</dd></div>';
+  }
+  var joignable=[val('jours'),val('moments')].filter(Boolean).join(' · ');
+  return '<article class="card">'+
+    '<div class="card-head"><div class="avatar" aria-hidden="true">'+esc(initials(nom))+'</div>'+
+    '<div><h3>'+(nom?esc(nom):'<span class="todo">Prénom Nom</span>')+'</h3>'+
+    '<p class="role">'+(poste?esc(poste):'<span class="todo">Poste à choisir</span>')+'</p></div></div>'+
+    '<dl class="facts">'+
+      fact('Taille',shown(FIELDS.taille))+
+      fact('Secteur',val('secteur'))+
+      fact('Cible commerciale',val('cible'))+
+      fact('Canal privilégié',val('canal'))+
+      fact('Joignable',joignable)+
+    '</dl></article>';
+}
+
+function fieldHTML(f){
+  var bad=S.showErrors&&!valid(f);
+  var txt=(f.type==='text'||f.type==='area')?'Complétez ce champ pour continuer.':'Faites un choix pour continuer.';
+  var err=bad?'<p class="err" role="alert">'+txt+'</p>':'';
+  var cls='field'+(bad?' invalid':'');
+  if(f.type==='text'||f.type==='area'){
+    var id='f-'+f.id;
+    var v=esc(A[f.id]||'');
+    var inv=bad?' aria-invalid="true"':'';
+    var ctl=f.type==='text'
+      ?'<input id="'+id+'" data-f="'+f.id+'" type="text" value="'+v+'" placeholder="'+esc(f.ph||'')+'" autocomplete="off"'+inv+'>'
+      :'<textarea id="'+id+'" data-f="'+f.id+'" rows="3" placeholder="'+esc(f.ph||'')+'"'+inv+'>'+v+'</textarea>';
+    return '<div class="'+cls+'" id="fld-'+f.id+'"><label class="lbl" for="'+id+'">'+esc(f.label)+'</label>'+ctl+err+'</div>';
+  }
+  var multi=f.type==='multi';
+  var chip=multi&&!f.options.some(function(o){return o.d;});
+  var cur=A[f.id];
+  var opts=f.options.map(function(o,i){
+    var on=multi?(Array.isArray(cur)&&cur.indexOf(o.v)>=0):cur===o.v;
+    return '<label class="opt'+(on?' on':'')+(chip?' chip':'')+'">'+
+      '<input id="'+f.id+'-'+i+'" data-f="'+f.id+'" type="'+(multi?'checkbox':'radio')+'" name="'+f.id+'" value="'+esc(o.v)+'"'+(on?' checked':'')+'>'+
+      '<span class="box" aria-hidden="true"></span>'+
+      '<span class="txt"><b>'+esc(o.t||o.v)+'</b>'+(o.d?'<small>'+esc(o.d)+'</small>':'')+'</span></label>';
+  }).join('');
+  var wrap=f.type==='cards'?'opts cards':(chip?'chips':'opts two');
+  var extra='';
+  if(f.id==='poste'&&cur==='Autre'){
+    extra='<div class="other"><label class="lbl sub" for="f-poste_autre">Précisez le poste</label>'+
+      '<input id="f-poste_autre" data-f="poste_autre" type="text" value="'+esc(A.poste_autre||'')+'" placeholder="Par exemple : Directeur commercial, Responsable des ressources humaines" autocomplete="off"'+(bad?' aria-invalid="true"':'')+'>'+
+      (bad?'<p class="err" role="alert">Précisez le poste pour continuer.</p>':'')+'</div>';
+    err='';
+  }
+  return '<div class="'+cls+'" id="fld-'+f.id+'" role="group" aria-labelledby="l-'+f.id+'">'+
+    '<p class="lbl" id="l-'+f.id+'">'+esc(f.label)+'</p><div class="'+wrap+'">'+opts+'</div>'+extra+err+'</div>';
+}
+
+function progressHTML(){
+  var items=STEPS.map(function(s,i){
+    var c=i<S.step?'done':(i===S.step?'cur':'todo');
+    var can=i<=S.max;
+    return '<li><button type="button" class="seg '+c+'" data-act="go" data-i="'+i+'"'+(can?'':' disabled')+(i===S.step?' aria-current="step"':'')+'>'+
+      '<span class="bar"></span><span class="lab">'+esc(s.title)+'</span></button></li>';
+  }).join('');
+  return '<nav class="prog" aria-label="Progression"><ol>'+items+'</ol></nav>';
+}
+
+function introView(){
+  var outline=STEPS.map(function(s){return '<li>'+esc(s.title)+'</li>';}).join('');
+  return '<div class="wrap"><div class="layout">'+
+    '<main class="panel"><p class="kicker">Recherche d’alternance</p>'+
+    '<h1 id="h" tabindex="-1">Créez le <span class="hl">persona</span> de votre recruteur cible</h1>'+
+    '<p class="lead">Avant d’écrire à un recruteur, apprenez à le connaître. En 6 étapes, vous décrivez la personne qui lira votre candidature : ce qu’elle cherche, ce qui la freine, comment elle décide.</p>'+
+    '<ol class="outline">'+outline+'</ol>'+
+    '<p class="note">Appuyez-vous sur du réel : offres d’emploi, profils LinkedIn de recruteurs et de managers, site de l’entreprise.</p>'+
+    '<div class="nav"><button type="button" class="btn primary" id="start" data-act="start">Commencer</button></div>'+
+    '<p class="foot">Vos réponses restent sur cet appareil.</p></main>'+
+    '<aside class="side" aria-label="Aperçu de la fiche"><p class="kicker">Votre fiche</p>'+cardHTML()+'</aside>'+
+    '</div></div>';
+}
+
+function formView(){
+  var st=STEPS[S.step];
+  var back=S.step>0?'<button type="button" class="btn ghost" id="back" data-act="back">Retour</button>':'';
+  var nextLabel=S.step===LAST?'Voir la synthèse':'Continuer';
+  return '<div class="wrap">'+progressHTML()+'<div class="layout">'+
+    '<main class="panel" aria-labelledby="h">'+
+    '<p class="kicker">Étape '+(S.step+1)+' sur '+STEPS.length+'</p>'+
+    '<h1 id="h" tabindex="-1">'+esc(st.title)+'</h1>'+
+    '<p class="lead">'+esc(st.intro)+'</p>'+
+    '<form id="form" novalidate><div class="fields">'+st.fields.map(fieldHTML).join('')+'</div>'+
+    '<div class="nav">'+back+'<button type="submit" class="btn primary" id="next">'+nextLabel+'</button></div></form>'+
+    '</main>'+
+    '<aside class="side" aria-label="Fiche persona en cours"><p class="kicker">Fiche en cours</p><div id="aside">'+cardHTML()+'</div>'+
+    '<p class="note">Appuyez-vous sur du réel : offres d’emploi, profils LinkedIn, site de l’entreprise.</p></aside>'+
+    '</div></div>';
+}
+
+function blocksHTML(){
+  return STEPS.map(function(st,i){
+    var qa=st.fields.map(function(f){
+      var a=shown(f);
+      return '<div class="qa"><p class="q">'+esc(f.label)+'</p><p class="a">'+esc(a)+'</p></div>';
+    }).join('');
+    return '<section class="blk"><div class="blk-h"><span class="num">'+('0'+(i+1)).slice(-2)+'</span><h2>'+esc(st.title)+'</h2>'+
+      '<button type="button" class="linkbtn" data-act="edit" data-i="'+i+'">Modifier</button></div>'+qa+'</section>';
+  }).join('');
+}
+
+function buildText(){
+  var L=['PERSONA DE MON RECRUTEUR CIBLE'];
+  var head=[val('nom'),val('poste')].filter(Boolean).join(', ');
+  if(head) L.push(head);
+  STEPS.forEach(function(st,i){
+    L.push('');
+    L.push((i+1)+'. '+st.title.toUpperCase());
+    st.fields.forEach(function(f){
+      L.push(f.label);
+      L.push(shown(f));
+      L.push('');
+    });
+  });
+  return L.join('\n').replace(/\s+$/,'');
+}
+
+function resultView(){
+  var first=val('nom').split(/\s+/)[0];
+  var title=first?'Voici <span class="hl">'+esc(first)+'</span>, votre recruteur cible':'Voici votre recruteur cible';
+  var fb=S.fallback?'<div class="fallback"><label class="lbl" for="copybox">Texte à copier</label><textarea id="copybox" readonly rows="10">'+esc(buildText())+'</textarea></div>':'';
+  return '<div class="wrap"><main>'+
+    '<p class="kicker">Synthèse</p>'+
+    '<h1 id="h" tabindex="-1">'+title+'</h1>'+
+    '<p class="lead">Relisez ce persona et vérifiez que chaque réponse s’appuie sur du réel.</p>'+
+    '<div class="actions">'+
+      '<button type="button" class="btn primary" id="pdf" data-act="pdf"'+(DL?'':' hidden')+'>Télécharger en PDF</button>'+
+      '<button type="button" class="btn ghost" id="copy" data-act="copy">Copier la synthèse</button>'+
+      '<button type="button" class="btn ghost" id="editall" data-act="edit" data-i="0">Modifier mes réponses</button>'+
+      '<button type="button" class="btn ghost" id="restart" data-act="restart">Recommencer</button>'+
+      '<span id="status" role="status" aria-live="polite"></span>'+
+    '</div>'+fb+
+    '<div class="res-grid"><div class="res-side">'+cardHTML()+'</div><div class="res-main">'+blocksHTML()+'</div></div>'+
+    '<p class="foot">Vos réponses restent sur cet appareil.</p>'+
+    '</main></div>';
+}
+
+function render(top){
+  var ae=document.activeElement;
+  var fid=(ae&&ae.id&&app.contains(ae))?ae.id:null;
+  app.innerHTML=S.view==='intro'?introView():(S.view==='form'?formView():resultView());
+  if(top){
+    window.scrollTo(0,0);
+    var h=document.getElementById('h');
+    if(h) h.focus({preventScroll:true});
+  }else if(fid){
+    var el=document.getElementById(fid);
+    if(el) el.focus({preventScroll:true});
+  }
+}
+
+var statusTimer=null;
+function setStatus(msg){
+  var el=document.getElementById('status');
+  if(!el) return;
+  el.textContent=msg;
+  clearTimeout(statusTimer);
+  statusTimer=setTimeout(function(){var e=document.getElementById('status');if(e)e.textContent='';},4000);
+}
+
+function next(){
+  var st=STEPS[S.step];
+  var ok=st.fields.every(valid);
+  if(!ok){
+    S.showErrors=true;
+    render();
+    var el=app.querySelector('.field.invalid .other input')||app.querySelector('.field.invalid input, .field.invalid textarea');
+    if(el) el.focus();
+    return;
+  }
+  S.showErrors=false;
+  if(S.step<LAST){
+    S.step++;
+    S.max=Math.max(S.max,S.step);
+  }else{
+    S.view='result';
+    S.fallback=false;
+  }
+  save();
+  render(true);
+}
+
+function copyText(){
+  var t=buildText();
+  var p;
+  try{p=navigator.clipboard.writeText(t);}catch(e){p=Promise.reject(e);}
+  p.then(function(){
+    setStatus('Synthèse copiée.');
+  },function(){
+    S.fallback=true;
+    render();
+    var box=document.getElementById('copybox');
+    if(box){box.focus();box.select();}
+    setStatus('Copie automatique impossible ici. Sélectionnez le texte ci-dessous.');
+  });
+}
+
+var DL=null;
+try{
+  if(window.claude&&window.claude.use){
+    window.claude.use('downloads').then(function(d){
+      DL=d||null;
+      var b=document.getElementById('pdf');
+      if(b) b.hidden=!DL;
+    },function(){});
+  }
+}catch(e){}
+
+function pdfTxt(s){
+  return String(s==null?'':s)
+    .replace(/[‘’]/g,"'").replace(/[“”]/g,'"')
+    .replace(/[  ]/g,' ').replace(/…/g,'...');
+}
+function slug(s){
+  var r=String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+  return r||'recruteur';
+}
+function buildPDF(){
+  var J=window.jspdf&&window.jspdf.jsPDF;
+  if(!J) return null;
+  var doc=new J({unit:'mm',format:'a4'});
+  var W=210,H=297,M=18,CW=W-2*M,y=M;
+  function ensure(h){if(y+h>H-M){doc.addPage();y=M;}}
+  function lines(arr,lh){
+    arr.forEach(function(l){ensure(lh);y+=lh;doc.text(l,M,y);});
+  }
+  doc.setFillColor(255,210,63);
+  doc.rect(M,y,24,2.4,'F');
+  y+=9;
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(86,100,113);
+  doc.text('PERSONA DE MON RECRUTEUR CIBLE',M,y);
+  y+=3;
+  doc.setFont('helvetica','bold');doc.setFontSize(24);doc.setTextColor(16,28,40);
+  lines(doc.splitTextToSize(pdfTxt(val('nom')||'Recruteur cible'),CW),10);
+  doc.setFont('helvetica','normal');doc.setFontSize(13);doc.setTextColor(86,100,113);
+  lines([pdfTxt(val('poste'))],7);
+  var facts=[shown(FIELDS.taille),val('secteur'),val('cible')].filter(Boolean).join('   |   ');
+  doc.setFontSize(10.5);
+  lines(doc.splitTextToSize(pdfTxt(facts),CW),5.8);
+  y+=6;
+  STEPS.forEach(function(st,i){
+    ensure(30);
+    doc.setDrawColor(16,28,40);doc.setLineWidth(0.5);
+    doc.line(M,y,W-M,y);
+    y+=3;
+    doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(16,28,40);
+    lines([('0'+(i+1)).slice(-2)+'  '+pdfTxt(st.title)],8);
+    y+=2;
+    st.fields.forEach(function(f){
+      ensure(18);
+      doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(86,100,113);
+      lines(doc.splitTextToSize(pdfTxt(f.label),CW),4.8);
+      doc.setFontSize(11);doc.setTextColor(16,28,40);
+      lines(doc.splitTextToSize(pdfTxt(shown(f)),CW),5.6);
+      y+=4;
+    });
+    y+=4;
+  });
+  var n=doc.getNumberOfPages();
+  for(var p=1;p<=n;p++){
+    doc.setPage(p);
+    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(86,100,113);
+    doc.text('Page '+p+' / '+n,W-M,H-9,{align:'right'});
+  }
+  return doc;
+}
+function savePDF(){
+  if(!DL) return;
+  var doc=null;
+  try{doc=buildPDF();}catch(e){doc=null;}
+  if(!doc){setStatus('Création du PDF impossible ici.');return;}
+  var data=doc.output('arraybuffer');
+  DL.save({filename:'persona-'+slug(val('nom'))+'.pdf',data:data}).then(function(){
+    setStatus('PDF enregistré.');
+  },function(err){
+    if(err&&err.code==='declined') setStatus('Téléchargement annulé.');
+    else setStatus('Téléchargement impossible ici. Utilisez Copier la synthèse.');
+  });
+}
+
+app.addEventListener('input',function(e){
+  var t=e.target;
+  var id=t.dataset&&t.dataset.f;
+  if(!id) return;
+  if(t.type==='radio'||t.type==='checkbox') return;
+  A[id]=t.value;
+  save();
+  var a=document.getElementById('aside');
+  if(a) a.innerHTML=cardHTML();
+  if(S.showErrors){
+    var key=id==='poste_autre'?'poste':id;
+    var f=FIELDS[key];
+    var box=document.getElementById('fld-'+key);
+    if(f&&box&&valid(f)){
+      box.classList.remove('invalid');
+      var er=box.querySelector('.err');
+      if(er) er.remove();
+      t.removeAttribute('aria-invalid');
+    }
+  }
+});
+
+app.addEventListener('change',function(e){
+  var t=e.target;
+  var id=t.dataset&&t.dataset.f;
+  if(!id) return;
+  var f=FIELDS[id];
+  if(t.type==='radio'){
+    A[id]=t.value;
+  }else if(t.type==='checkbox'){
+    var arr=Array.isArray(A[id])?A[id].slice():[];
+    var i=arr.indexOf(t.value);
+    if(t.checked&&i<0) arr.push(t.value);
+    if(!t.checked&&i>=0) arr.splice(i,1);
+    A[id]=f.options.map(function(o){return o.v;}).filter(function(v){return arr.indexOf(v)>=0;});
+  }else{
+    return;
+  }
+  save();
+  render();
+});
+
+app.addEventListener('submit',function(e){
+  e.preventDefault();
+  next();
+});
+
+app.addEventListener('click',function(e){
+  var b=e.target.closest('[data-act]');
+  if(!b) return;
+  var act=b.dataset.act;
+  if(act==='start'){
+    S.view='form';S.step=0;S.showErrors=false;
+    save();render(true);
+  }else if(act==='back'){
+    if(S.step>0){S.step--;S.showErrors=false;save();render(true);}
+  }else if(act==='go'){
+    var i=+b.dataset.i;
+    if(i<=S.max){S.step=i;S.showErrors=false;save();render(true);}
+  }else if(act==='edit'){
+    S.view='form';S.step=+b.dataset.i||0;S.max=LAST;S.showErrors=false;S.fallback=false;
+    save();render(true);
+  }else if(act==='pdf'){
+    savePDF();
+  }else if(act==='copy'){
+    copyText();
+  }else if(act==='restart'){
+    if(b.dataset.armed){
+      A={};
+      S={view:'intro',step:0,max:0,showErrors:false,fallback:false};
+      save();render(true);
+    }else{
+      b.dataset.armed='1';
+      b.classList.add('armed');
+      b.textContent='Confirmer : tout effacer';
+      setTimeout(function(){
+        if(b.isConnected){delete b.dataset.armed;b.classList.remove('armed');b.textContent='Recommencer';}
+      },4000);
+    }
+  }
+});
+
+render(false);
+})();
+</script>
